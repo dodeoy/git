@@ -3,7 +3,7 @@ import glob
 import random
 import requests
 import yt_dlp
-import logging  # تأكد من استيراد مكتبة logging
+import logging
 from pyrogram import filters
 from strings.filters import command
 from youtube_search import YoutubeSearch
@@ -18,18 +18,19 @@ def get_cookies_file():
     return cookie_txt_file
 
 @app.on_message(command(["/song", "بحث", "تحميل", "تنزيل", "يوت", "yt"]))
-def song(client, message):
+async def song(client, message):
     user_id = message.from_user.id
     user_name = message.from_user.first_name
     chutiya = message.from_user.mention
 
     query = " ".join(message.command[1:])
     print(query)
-    m = message.reply("جاري البحث لحظة...")
+    
+    m = await message.reply("جاري البحث لحظة...")
     
     ydl_opts = {
         "format": "bestaudio[ext=m4a]",
-        "cookiefile": get_cookies_file()  # Use the cookies file
+        "cookiefile": get_cookies_file()
     }
     
     try:
@@ -42,11 +43,11 @@ def song(client, message):
         open(thumb_name, "wb").write(thumb.content)
 
     except Exception as e:
-        m.edit("لم يتم العثور على الأغنية، يرجى المحاولة مرة أخرى!")
+        await m.edit("لم يتم العثور على الأغنية، يرجى المحاولة مرة أخرى!")
         logging.error(f"Failed to fetch YouTube video: {str(e)}")
         return
     
-    m.edit("جارٍ التنزيل... الرجاء الانتظار!")
+    await m.edit("جارٍ التنزيل... الرجاء الانتظار!")
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -56,17 +57,17 @@ def song(client, message):
         
         rep = f"الاسم: {title[:25]}\nبواسطة: {chutiya}"
         
-        message.reply_audio(
+        await message.reply_audio(
             audio_file,
             caption=rep,
             performer="@mmmsc.",
             thumb=thumb_name,
             title=title,
         )
-        m.delete()
+        await m.delete()
     
     except Exception as e:
-        m.edit(f"[Victorious](t.me/mmmsc) 💕**\n\**خطأ :** {e}")
+        await m.edit(f"[Victorious](t.me/mmmsc) 💕**\n\**خطأ :** {e}")
         logging.error(f"Error while downloading audio: {str(e)}")
 
     finally:
