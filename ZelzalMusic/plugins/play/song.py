@@ -67,7 +67,7 @@ async def song(client, message):
         await m.delete()
     
     except Exception as e:
-        await m.edit(f"[Victorious](t.me/mmmsc) 💕**\n\**خطأ :** {e}")
+        await m.edit(f"[Victorious] **\n\**خطأ :** {e}")
         logging.error(f"Error while downloading audio: {str(e)}")
 
     finally:
