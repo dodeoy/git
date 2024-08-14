@@ -19,16 +19,47 @@ import glob
 import random
 import logging
 
-def cookie_txt_file():
-    folder_path = f"{os.getcwd()}/cookies"
-    filename = f"{os.getcwd()}/cookies/logs.csv"
+async def is_valid_cookie(cookie_file):
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "yt-dlp",
+            "--cookies", cookie_file,
+            "--list-formats",
+            'https://youtube.com/some_video',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            print(f'Invalid cookie file {cookie_file}: {stderr.decode()}')
+            return False
+        return True
+    except Exception as e:
+        print(f'Error validating cookie file {cookie_file}: {e}')
+        return False
+
+async def cookie_txt_file():
+    folder_path = os.path.join(os.getcwd(), 'cookies')
+    filename = os.path.join(folder_path, 'logs.csv')
+    
+
     txt_files = glob.glob(os.path.join(folder_path, '*.txt'))
     if not txt_files:
         raise FileNotFoundError("No .txt files found in the specified folder.")
-    cookie_txt_file = random.choice(txt_files)
+    
+
+    valid_files = [file for file in txt_files if await is_valid_cookie(file)]
+    if not valid_files:
+        raise FileNotFoundError("No valid cookie files found.")
+    
+
+    cookie_txt_file = random.choice(valid_files)
+    
+
     with open(filename, 'a') as file:
-        file.write(f'Choosen File : {cookie_txt_file}\n')
-    return f"""cookies/{str(cookie_txt_file).split("/")[-1]}"""
+        file.write(f'Chosen File : {cookie_txt_file}\n')
+    
+    return f"""cookies/{os.path.basename(cookie_txt_file)}"""
 
 
 
